@@ -2,18 +2,6 @@
 
 import Image from "next/image";
 import { useTransition } from "react";
-import {
-  BriefcaseBusiness,
-  Check,
-  Download,
-  FolderKanban,
-  House,
-  Languages,
-  Settings,
-  Sparkles,
-  UserRound,
-  type LucideIcon,
-} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Button as MotionButton } from "@/components/animate-ui/primitives/buttons/button";
@@ -22,6 +10,7 @@ import {
   PopoverPanel,
   PopoverTrigger,
 } from "@/components/animate-ui/components/base/popover";
+import { AppIcon, type AppIconName } from "@/components/icons";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -29,15 +18,15 @@ import { cn } from "@/lib/utils";
 type NavItem = {
   href: string;
   labelKey: "home" | "workspace" | "inspiration" | "assets" | "settings";
-  icon: LucideIcon;
+  icon: AppIconName;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/", labelKey: "home", icon: House },
-  { href: "/workspace", labelKey: "workspace", icon: BriefcaseBusiness },
-  { href: "/inspiration", labelKey: "inspiration", icon: Sparkles },
-  { href: "/assets", labelKey: "assets", icon: FolderKanban },
-  { href: "/settings", labelKey: "settings", icon: Settings },
+  { href: "/", labelKey: "home", icon: "house" },
+  { href: "/workspace", labelKey: "workspace", icon: "briefcase" },
+  { href: "/inspiration", labelKey: "inspiration", icon: "sparkles" },
+  { href: "/assets", labelKey: "assets", icon: "folderKanban" },
+  { href: "/settings", labelKey: "settings", icon: "settingsHex" },
 ];
 
 export function AppNavbar() {
@@ -107,8 +96,6 @@ function SidebarItem({
   label: string;
   active: boolean;
 }) {
-  const Icon = item.icon;
-
   return (
     <Link
       href={item.href}
@@ -127,7 +114,8 @@ function SidebarItem({
           active ? "opacity-100" : "opacity-0",
         )}
       />
-      <Icon
+      <AppIcon
+        name={item.icon}
         className={cn(
           "size-[18px] transition-colors",
           active ? "text-sidebar-primary" : "text-current",
@@ -145,7 +133,7 @@ function FooterActions() {
   return (
     <div className="flex flex-col items-center gap-1 border-t border-sidebar-border px-3 py-3">
       <LanguageSwitcher />
-      <FooterIconButton icon={Download} label={t("logs")} />
+      <FooterIconButton icon="download" label={t("logs")} />
 
       <MotionButton asChild hoverScale={1.08} tapScale={0.92}>
         <button
@@ -153,7 +141,7 @@ function FooterActions() {
           aria-label={t("account")}
           className="mt-1 flex size-9 items-center justify-center rounded-full border border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground transition-colors hover:border-sidebar-ring/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
-          <UserRound className="size-4" />
+          <AppIcon name="user" className="size-4" />
         </button>
       </MotionButton>
     </div>
@@ -184,7 +172,7 @@ function LanguageSwitcher() {
           isPending && "opacity-60",
         )}
       >
-        <Languages className="size-[18px]" strokeWidth={1.75} />
+        <AppIcon name="languages" className="size-[18px]" strokeWidth={1.75} />
       </PopoverTrigger>
       <PopoverPanel
         side="right"
@@ -210,7 +198,9 @@ function LanguageSwitcher() {
                 )}
               >
                 <span>{tLang(locale)}</span>
-                {isActive ? <Check className="size-4 text-primary" /> : null}
+                {isActive ? (
+                  <AppIcon name="check" className="size-4 text-primary" />
+                ) : null}
               </button>
             );
           })}
@@ -221,10 +211,10 @@ function LanguageSwitcher() {
 }
 
 function FooterIconButton({
-  icon: Icon,
+  icon,
   label,
 }: {
-  icon: LucideIcon;
+  icon: AppIconName;
   label: string;
 }) {
   return (
@@ -234,7 +224,7 @@ function FooterIconButton({
         aria-label={label}
         className="flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
       >
-        <Icon className="size-[18px]" strokeWidth={1.75} />
+        <AppIcon name={icon} className="size-[18px]" strokeWidth={1.75} />
       </button>
     </MotionButton>
   );

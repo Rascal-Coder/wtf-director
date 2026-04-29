@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Wand2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -9,6 +8,7 @@ import {
   PopoverPanel,
   PopoverTrigger,
 } from "@/components/animate-ui/components/base/popover";
+import { AppIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 import {
@@ -39,9 +39,10 @@ export function ArtStyleSelector({ value, onChange }: ArtStyleSelectorProps) {
           open && "border-primary/60 ring-2 ring-primary/20",
         )}
       >
-        <Wand2 className="size-3.5 text-primary" />
+        <AppIcon name="wand" className="size-3.5 text-primary" />
         <span>{t(selected)}</span>
-        <ChevronDown
+        <AppIcon
+          name="chevronDown"
           className={cn(
             "size-3.5 text-muted-foreground transition-transform",
             open && "rotate-180",

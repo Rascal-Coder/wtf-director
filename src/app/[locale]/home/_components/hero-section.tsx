@@ -2,11 +2,11 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowRight, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { LiquidButton } from "@/components/animate-ui/components/buttons/liquid";
+import { AppIcon } from "@/components/icons";
 import { StoryInputComposer } from "@/components/story-input-composer";
 import { LongTextDetectionPrompt } from "@/components/long-text-detection-prompt";
 import { LampContainer } from "@/components/ui/lamp";
@@ -117,7 +117,7 @@ export function HeroSection() {
               size="sm"
               className="rounded-full text-primary hover:bg-primary/10 hover:text-primary"
             >
-              <Sparkles className="text-primary" />
+              <AppIcon name="sparkles" className="text-primary" />
               {t("aiHelp")}
             </Button>
           }
@@ -128,7 +128,7 @@ export function HeroSection() {
               className="rounded-full px-4 text-primary-foreground shadow-[0_6px_24px_-6px_color-mix(in_oklab,var(--primary)_70%,transparent)] hover:text-primary-foreground [--liquid-button-background-color:var(--primary)] [--liquid-button-color:color-mix(in_oklab,var(--primary)_75%,white)]"
             >
               {t("startCreate")}
-              <ArrowRight />
+              <AppIcon name="arrowRight" />
             </LiquidButton>
           }
         />

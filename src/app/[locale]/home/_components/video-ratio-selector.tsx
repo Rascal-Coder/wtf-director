@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
 
 import {
   Popover,
   PopoverPanel,
   PopoverTrigger,
 } from "@/components/animate-ui/components/base/popover";
+import { AppIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 import { RATIO_OPTIONS, type RatioOption } from "../_constants";
@@ -78,7 +78,8 @@ export function VideoRatioSelector({
       >
         <RatioGlyph w={selected.w} h={selected.h} active />
         <span className="text-foreground">{ratioLabel(selected)}</span>
-        <ChevronDown
+        <AppIcon
+          name="chevronDown"
           className={cn(
             "size-3.5 text-muted-foreground transition-transform",
             open && "rotate-180",

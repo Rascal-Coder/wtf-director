@@ -1,7 +1,5 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
-
 import {
   Dialog,
   DialogBackdrop,
@@ -9,6 +7,7 @@ import {
   DialogPortal,
 } from "@/components/animate-ui/primitives/base/dialog";
 import { Button } from "@/components/animate-ui/components/buttons/button";
+import { AppIcon } from "@/components/icons";
 
 export interface LongTextDetectionPromptCopy {
   title: string;
@@ -50,7 +49,7 @@ export function LongTextDetectionPrompt({
           <div className="space-y-5">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/15 via-violet-500/15 to-blue-500/15">
-                <Sparkles className="size-5 text-violet-600" />
+                <AppIcon name="sparkles" className="size-5 text-violet-600" />
               </div>
               <h3 className="text-lg font-bold text-foreground">{copy.title}</h3>
             </div>
@@ -71,7 +70,7 @@ export function LongTextDetectionPrompt({
                 onClick={onSmartSplit}
                 className="flex h-auto w-full items-center justify-center gap-2 rounded-xl border-0 bg-gradient-to-r from-indigo-500 via-violet-500 to-blue-500 py-6 text-base font-semibold text-white shadow-[0_12px_30px_-12px_rgba(99,102,241,0.6)] hover:opacity-95"
               >
-                <Sparkles className="size-5" />
+                <AppIcon name="sparkles" className="size-5" />
                 <span>{copy.smartSplitLabel}</span>
                 <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">
                   {copy.smartSplitBadge}
