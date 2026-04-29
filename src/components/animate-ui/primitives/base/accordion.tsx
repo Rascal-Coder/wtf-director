@@ -54,6 +54,7 @@ function AccordionItem(props: AccordionItemProps) {
   );
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsOpen(value?.includes(props?.value) ?? false);
   }, [value, props?.value]);
 

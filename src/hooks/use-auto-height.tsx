@@ -94,6 +94,7 @@ export function useAutoHeight<T extends HTMLElement = HTMLDivElement>(
   React.useLayoutEffect(() => {
     if (height === 0) {
       const next = measure();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (next !== 0) setHeight(next);
     }
   }, [height, measure]);

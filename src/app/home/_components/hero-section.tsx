@@ -50,7 +50,7 @@ export function HeroSection() {
 
   return (
     <section className="relative w-full">
-      <LampContainer className="min-h-[60vh] md:min-h-[64vh]">
+      <LampContainer className="min-h-[max(60vh,520px)] md:min-h-[max(64vh,640px)]">
         <div className="flex flex-col items-center px-4">
           <motion.h1
             initial={{ opacity: 0.5, y: 60 }}
@@ -75,7 +75,7 @@ export function HeroSection() {
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.7, ease: "easeOut" }}
-        className="relative z-10 mx-auto -mt-44 w-full max-w-[1600px] px-6 sm:px-10 lg:px-12"
+        className="relative z-10 mx-auto -mt-24 w-full max-w-[1600px] px-6 sm:px-10 md:-mt-44 lg:px-12"
       >
         <StoryInputComposer
           value={story}
