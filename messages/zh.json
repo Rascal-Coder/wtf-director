@@ -17,6 +17,9 @@
     "subtitle": "把脑海里的故事，交给 AI 帮你拆分、分镜、生图，一路到银幕",
     "placeholder": "由一个想法或故事开始...",
     "aiHelp": "AI 帮我写",
+    "aiHelpLoading": "正在扩写...",
+    "aiHelpEmpty": "请先输入一个想法或关键词，再让 AI 扩写",
+    "aiHelpFailed": "AI 扩写失败：{detail}",
     "startCreate": "开始创作"
   },
   "Selectors": {
@@ -46,5 +49,93 @@
   "Languages": {
     "zh": "中文",
     "en": "English"
+  },
+  "NovelPromotion": {
+    "stageInput": {
+      "title": "故事原文",
+      "subtitle": "确认或继续编辑你的故事，准备转成分镜剧本",
+      "placeholder": "在这里输入故事原文，或先用 AI 扩写...",
+      "expand": "AI 扩写",
+      "expanding": "扩写中...",
+      "expandFailed": "AI 扩写失败：{detail}",
+      "expandEmpty": "请先输入故事内容",
+      "next": "开始创作",
+      "characters": "{count} 字"
+    },
+    "stageRunning": {
+      "title": "正在生成分镜剧本",
+      "subtitle": "Step 1 分析人物 / 场景 / 道具 → Step 2 切片 → Step 3 逐段转剧本",
+      "running": "处理中",
+      "finished": "已完成",
+      "step": {
+        "prepare": "准备资源",
+        "analyze": "分析人物 / 场景 / 道具",
+        "split": "切分剧情片段",
+        "screenplay": "生成分镜剧本",
+        "story_to_script_persist_done": "落库收尾",
+        "queued": "排队中",
+        "subscribed": "已连接，等待进度..."
+      },
+      "phase": {
+        "analyze": "Step 1 · 分析",
+        "split": "Step 2 · 切片",
+        "screenplay": "Step 3 · 分镜"
+      },
+      "status": {
+        "pending": "待开始",
+        "streaming": "推理中",
+        "done": "已完成",
+        "error": "失败"
+      },
+      "sidebar": {
+        "pending": "尚未开始",
+        "followLatest": "跟随最新任务",
+        "followingLatest": "已跟随最新"
+      },
+      "panel": {
+        "streaming": "AI 实时输出",
+        "finalResult": "最终结果",
+        "chars": "字",
+        "waiting": "等待模型输出...",
+        "noOutput": "暂无输出",
+        "waitingTokens": "正在等待第一个 token...",
+        "emptyTitle": "等待 AI 开始第一个任务",
+        "emptyHint": "可以从左侧选择查看任意子任务",
+        "failed": "任务失败"
+      },
+      "metrics": {
+        "characters": "人物",
+        "locations": "场景",
+        "props": "道具",
+        "clips": "剧情片段",
+        "screenplays": "分镜进度"
+      },
+      "thinking": {
+        "title": "思考过程",
+        "events": "条事件",
+        "empty": "等待 AI 开始工作..."
+      },
+      "abort": "取消",
+      "failed": "失败：{detail}",
+      "retry": "重试"
+    },
+    "stageDone": {
+      "title": "分镜剧本已生成",
+      "subtitle": "共切分 {clipCount} 段，{success}/{clipCount} 段成功生成分镜",
+      "clipCard": {
+        "shotCount": "{count} 个镜头",
+        "noShots": "未生成镜头",
+        "matchExact": "原文精确匹配",
+        "matchPartial": "原文近似匹配",
+        "matchFuzzy": "原文模糊匹配"
+      },
+      "openClip": "查看",
+      "createNew": "再来一个故事"
+    },
+    "errors": {
+      "createFailed": "创建项目失败：{detail}",
+      "loadFailed": "加载项目失败：{detail}",
+      "streamFailed": "进度连接失败：{detail}"
+    }
   }
 }

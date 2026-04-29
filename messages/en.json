@@ -17,6 +17,9 @@
     "subtitle": "Hand your stories to AI — split, storyboard, generate visuals, all the way to screen.",
     "placeholder": "Start with an idea or a story...",
     "aiHelp": "Let AI write",
+    "aiHelpLoading": "Expanding...",
+    "aiHelpEmpty": "Type an idea or a keyword first, then let AI expand it.",
+    "aiHelpFailed": "AI expansion failed: {detail}",
     "startCreate": "Start creating"
   },
   "Selectors": {
@@ -46,5 +49,93 @@
   "Languages": {
     "zh": "中文",
     "en": "English"
+  },
+  "NovelPromotion": {
+    "stageInput": {
+      "title": "Story draft",
+      "subtitle": "Review or refine your story before turning it into a shot list",
+      "placeholder": "Paste your story here, or let AI expand a sketch first...",
+      "expand": "AI expand",
+      "expanding": "Expanding...",
+      "expandFailed": "AI expansion failed: {detail}",
+      "expandEmpty": "Type the story first",
+      "next": "Start creating",
+      "characters": "{count} chars"
+    },
+    "stageRunning": {
+      "title": "Generating shot list",
+      "subtitle": "Step 1 characters / locations / props → Step 2 split clips → Step 3 per-clip screenplay",
+      "running": "Working",
+      "finished": "Done",
+      "step": {
+        "prepare": "Preparing",
+        "analyze": "Analyzing characters / locations / props",
+        "split": "Splitting clips",
+        "screenplay": "Generating screenplays",
+        "story_to_script_persist_done": "Finalizing",
+        "queued": "Queued",
+        "subscribed": "Connected, awaiting progress..."
+      },
+      "phase": {
+        "analyze": "Step 1 · Analyze",
+        "split": "Step 2 · Split",
+        "screenplay": "Step 3 · Screenplay"
+      },
+      "status": {
+        "pending": "Pending",
+        "streaming": "Reasoning",
+        "done": "Done",
+        "error": "Failed"
+      },
+      "sidebar": {
+        "pending": "Not started",
+        "followLatest": "Follow latest",
+        "followingLatest": "Following"
+      },
+      "panel": {
+        "streaming": "Live output",
+        "finalResult": "Final result",
+        "chars": "chars",
+        "waiting": "Waiting for model output...",
+        "noOutput": "No output",
+        "waitingTokens": "Waiting for first token...",
+        "emptyTitle": "Waiting for first task",
+        "emptyHint": "Pick a substep on the left to inspect",
+        "failed": "Task failed"
+      },
+      "metrics": {
+        "characters": "Characters",
+        "locations": "Locations",
+        "props": "Props",
+        "clips": "Clips",
+        "screenplays": "Screenplays"
+      },
+      "thinking": {
+        "title": "Thinking log",
+        "events": "events",
+        "empty": "Waiting for AI to start..."
+      },
+      "abort": "Cancel",
+      "failed": "Failed: {detail}",
+      "retry": "Retry"
+    },
+    "stageDone": {
+      "title": "Shot list ready",
+      "subtitle": "{clipCount} clips, {success}/{clipCount} screenplays succeeded",
+      "clipCard": {
+        "shotCount": "{count} shots",
+        "noShots": "No shots",
+        "matchExact": "Exact source match",
+        "matchPartial": "Partial source match",
+        "matchFuzzy": "Fuzzy source match"
+      },
+      "openClip": "Open",
+      "createNew": "New story"
+    },
+    "errors": {
+      "createFailed": "Create project failed: {detail}",
+      "loadFailed": "Load project failed: {detail}",
+      "streamFailed": "Stream connection failed: {detail}"
+    }
   }
 }

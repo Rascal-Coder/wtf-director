@@ -1,0 +1,147 @@
+// 数据模型：小说推广 / 故事转剧本流程
+// 使用 SQLite 作为开发数据库，生产可切换至 PostgreSQL（仅需更换 provider 和 url）
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model NovelPromotionProject {
+  id        String   @id
+  title     String
+  ratio     String?
+  artStyle  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  episodes NovelPromotionEpisode[]
+}
+
+model NovelPromotionEpisode {
+  id                     String   @id
+  projectId              String
+  index                  Int      @default(0)
+  rawText                String
+  charactersIntroduction String?
+  status                 String   @default("draft")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  project    NovelPromotionProject     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clips      NovelPromotionClip[]
+  characters NovelPromotionCharacter[]
+  locations  NovelPromotionLocation[]
+  props      NovelPromotionProp[]
+  runs       WorkflowRun[]
+
+  @@index([projectId])
+}
+
+model NovelPromotionCharacter {
+  id          String   @id
+  episodeId   String
+  libName     String
+  description String?
+  attributes  String?
+  createdAt   DateTime @default(now())
+
+  episode NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([episodeId, libName])
+}
+
+model NovelPromotionLocation {
+  id          String   @id
+  episodeId   String
+  libName     String
+  description String?
+  createdAt   DateTime @default(now())
+
+  episode NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([episodeId, libName])
+}
+
+model NovelPromotionProp {
+  id          String   @id
+  episodeId   String
+  libName     String
+  description String?
+  createdAt   DateTime @default(now())
+
+  episode NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([episodeId, libName])
+}
+
+model NovelPromotionClip {
+  id         String   @id
+  episodeId  String
+  index      Int
+  startText  String
+  endText    String
+  content    String
+  location   String?
+  characters String?
+  props      String?
+  matchLevel String?
+  screenplay String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  episode NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([episodeId, index])
+}
+
+model WorkflowRun {
+  id         String    @id
+  episodeId  String
+  type       String
+  status     String    @default("queued")
+  progress   Int       @default(0)
+  step       String?
+  error      String?
+  result     String?
+  leaseUntil DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  episode   NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  artifacts Artifact[]
+  llmTasks  LLMTask[]
+
+  @@index([episodeId, type])
+}
+
+model LLMTask {
+  id        String   @id
+  runId     String
+  dedupeKey String   @unique
+  kind      String
+  status    String   @default("pending")
+  attempts  Int      @default(0)
+  output    String?
+  error     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  run WorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+}
+
+model Artifact {
+  id        String   @id
+  runId     String
+  kind      String
+  refId     String?
+  payload   String
+  createdAt DateTime @default(now())
+
+  run WorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, kind])
+}
