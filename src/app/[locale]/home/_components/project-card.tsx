@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button as MotionButton } from "@/components/animate-ui/primitives/buttons/button";
 
@@ -13,6 +14,7 @@ type ProjectCardProps = {
 };
 
 export function ProjectCard({ project, onClick }: ProjectCardProps) {
+  const t = useTranslations("RecentProjects");
   const [imageLoaded, setImageLoaded] = useState(!project.cover);
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -78,7 +80,7 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
             {project.description}
           </h3>
           <p className="mt-1 text-[11px] text-white/70">
-            最后编辑于 {project.time}
+            {t("lastEdited", { time: project.time })}
           </p>
         </div>
       </article>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button as MotionButton } from "@/components/animate-ui/primitives/buttons/button";
 
@@ -9,6 +10,8 @@ type CreateProjectCardProps = {
 };
 
 export function CreateProjectCard({ onClick }: CreateProjectCardProps) {
+  const t = useTranslations("RecentProjects");
+
   return (
     <MotionButton asChild hoverScale={1.02} tapScale={0.99}>
       <button
@@ -20,9 +23,11 @@ export function CreateProjectCard({ onClick }: CreateProjectCardProps) {
           <Plus className="size-5" />
         </span>
         <div className="text-center">
-          <div className="text-sm font-semibold text-foreground">创建新项目</div>
+          <div className="text-sm font-semibold text-foreground">
+            {t("createTitle")}
+          </div>
           <div className="mt-1 text-xs text-muted-foreground">
-            开启您的创作之旅
+            {t("createSubtitle")}
           </div>
         </div>
       </button>

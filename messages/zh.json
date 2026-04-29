@@ -1,0 +1,50 @@
+{
+  "Nav": {
+    "home": "首页",
+    "workspace": "工作区",
+    "inspiration": "灵感广场",
+    "assets": "资产中心",
+    "settings": "设置中心",
+    "mainNav": "主导航",
+    "backHome": "返回首页",
+    "language": "语言",
+    "switchLanguage": "切换语言",
+    "logs": "日志",
+    "account": "账号"
+  },
+  "Hero": {
+    "title": "从灵感到银幕",
+    "subtitle": "把脑海里的故事，交给 AI 帮你拆分、分镜、生图，一路到银幕",
+    "placeholder": "由一个想法或故事开始...",
+    "aiHelp": "AI 帮我写",
+    "startCreate": "开始创作"
+  },
+  "Selectors": {
+    "style": {
+      "comic": "漫画风",
+      "guoman": "精致国漫",
+      "anime": "日系动漫风",
+      "realistic": "真人风格"
+    }
+  },
+  "RecentProjects": {
+    "title": "最近项目",
+    "viewAll": "查看全部项目",
+    "createTitle": "创建新项目",
+    "createSubtitle": "开启您的创作之旅",
+    "lastEdited": "最后编辑于 {time}"
+  },
+  "LongTextPrompt": {
+    "title": "检测到长文本",
+    "description": "你输入的内容较长，直接生成可能会超出单条故事的最佳长度。建议先让 AI 智能拆分为多段，质量更稳定。",
+    "strongRecommend": "强烈推荐：使用智能拆分，确保每段都在最佳生成区间。",
+    "smartSplitLabel": "智能拆分",
+    "smartSplitBadge": "推荐",
+    "continueLabel": "继续直接创作",
+    "continueHint": "可能影响生成质量"
+  },
+  "Languages": {
+    "zh": "中文",
+    "en": "English"
+  }
+}

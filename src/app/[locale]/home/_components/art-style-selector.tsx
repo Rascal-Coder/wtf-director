@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, Wand2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   Popover,
@@ -10,7 +11,10 @@ import {
 } from "@/components/animate-ui/components/base/popover";
 import { cn } from "@/lib/utils";
 
-import { STYLE_OPTIONS, type StyleOption } from "../_constants";
+import {
+  STYLE_OPTION_VALUES,
+  type StyleOptionValue,
+} from "../_constants";
 
 type ArtStyleSelectorProps = {
   value: string;
@@ -18,9 +22,11 @@ type ArtStyleSelectorProps = {
 };
 
 export function ArtStyleSelector({ value, onChange }: ArtStyleSelectorProps) {
+  const t = useTranslations("Selectors.style");
   const [open, setOpen] = useState(false);
   const selected =
-    STYLE_OPTIONS.find((o) => o.value === value) ?? STYLE_OPTIONS[0];
+    (STYLE_OPTION_VALUES.find((v) => v === value) as StyleOptionValue | undefined) ??
+    STYLE_OPTION_VALUES[0];
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -34,7 +40,7 @@ export function ArtStyleSelector({ value, onChange }: ArtStyleSelectorProps) {
         )}
       >
         <Wand2 className="size-3.5 text-primary" />
-        <span>{selected.label}</span>
+        <span>{t(selected)}</span>
         <ChevronDown
           className={cn(
             "size-3.5 text-muted-foreground transition-transform",
@@ -49,13 +55,14 @@ export function ArtStyleSelector({ value, onChange }: ArtStyleSelectorProps) {
         className="w-[320px] rounded-2xl border border-border/60 bg-popover/95 p-3 shadow-xl backdrop-blur-xl"
       >
         <div className="grid grid-cols-2 gap-2">
-          {STYLE_OPTIONS.map((option) => (
+          {STYLE_OPTION_VALUES.map((option) => (
             <StyleOptionCell
-              key={option.value}
+              key={option}
               option={option}
-              active={option.value === value}
+              label={t(option)}
+              active={option === value}
               onClick={() => {
-                onChange(option.value);
+                onChange(option);
                 setOpen(false);
               }}
             />
@@ -68,10 +75,12 @@ export function ArtStyleSelector({ value, onChange }: ArtStyleSelectorProps) {
 
 function StyleOptionCell({
   option,
+  label,
   active,
   onClick,
 }: {
-  option: StyleOption;
+  option: StyleOptionValue;
+  label: string;
   active: boolean;
   onClick: () => void;
 }) {
@@ -80,6 +89,7 @@ function StyleOptionCell({
       type="button"
       onClick={onClick}
       aria-pressed={active}
+      data-value={option}
       className={cn(
         "flex h-10 items-center justify-center rounded-xl border px-3 text-sm font-medium transition-all",
         active
@@ -87,7 +97,7 @@ function StyleOptionCell({
           : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/50 hover:text-foreground",
       )}
     >
-      {option.label}
+      {label}
     </button>
   );
 }

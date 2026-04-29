@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 
 import { RATIO_OPTIONS, type RatioOption } from "../_constants";
 
+const ratioLabel = (option: RatioOption) => `${option.w}:${option.h}`;
+
 type VideoRatioSelectorProps = {
   value: string;
   onChange: (value: string) => void;
@@ -75,7 +77,7 @@ export function VideoRatioSelector({
         )}
       >
         <RatioGlyph w={selected.w} h={selected.h} active />
-        <span className="text-foreground">{selected.label}</span>
+        <span className="text-foreground">{ratioLabel(selected)}</span>
         <ChevronDown
           className={cn(
             "size-3.5 text-muted-foreground transition-transform",
@@ -135,7 +137,7 @@ function RatioOptionCell({
           active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
         )}
       >
-        {option.label}
+        {ratioLabel(option)}
       </span>
     </button>
   );

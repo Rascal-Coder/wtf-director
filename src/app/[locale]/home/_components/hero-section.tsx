@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { LiquidButton } from "@/components/animate-ui/components/buttons/liquid";
@@ -11,11 +12,13 @@ import { LongTextDetectionPrompt } from "@/components/long-text-detection-prompt
 import { LampContainer } from "@/components/ui/lamp";
 import { HOME_QUICK_START_MIN_ROWS } from "@/lib/ui/textarea-height";
 
-import { LONG_TEXT_PROMPT_COPY, LONG_TEXT_THRESHOLD } from "../_constants";
+import { LONG_TEXT_THRESHOLD } from "../_constants";
 import { ArtStyleSelector } from "./art-style-selector";
 import { VideoRatioSelector } from "./video-ratio-selector";
 
 export function HeroSection() {
+  const t = useTranslations("Hero");
+  const tPrompt = useTranslations("LongTextPrompt");
   const [story, setStory] = useState("");
   const [videoRatio, setVideoRatio] = useState<string>("21:9");
   const [artStyle, setArtStyle] = useState<string>("comic");
@@ -48,6 +51,19 @@ export function HeroSection() {
     // TODO: 接入直接创作流程
   }, []);
 
+  const longTextCopy = useMemo(
+    () => ({
+      title: tPrompt("title"),
+      description: tPrompt("description"),
+      strongRecommend: tPrompt("strongRecommend"),
+      smartSplitLabel: tPrompt("smartSplitLabel"),
+      smartSplitBadge: tPrompt("smartSplitBadge"),
+      continueLabel: tPrompt("continueLabel"),
+      continueHint: tPrompt("continueHint"),
+    }),
+    [tPrompt],
+  );
+
   return (
     <section className="relative w-full">
       <LampContainer className="min-h-[max(60vh,520px)] md:min-h-[max(64vh,640px)]">
@@ -58,7 +74,7 @@ export function HeroSection() {
             transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
             className="max-w-3xl bg-gradient-to-br from-foreground via-primary/80 to-primary bg-clip-text text-center text-4xl font-semibold tracking-tight text-transparent md:text-6xl"
           >
-            从灵感到银幕
+            {t("title")}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -66,7 +82,7 @@ export function HeroSection() {
             transition={{ delay: 0.55, duration: 0.7, ease: "easeOut" }}
             className="mt-4 max-w-2xl text-center text-sm text-muted-foreground md:text-[15px]"
           >
-            把脑海里的故事，交给 AI 帮你拆分、分镜、生图，一路到银幕
+            {t("subtitle")}
           </motion.p>
         </div>
       </LampContainer>
@@ -80,7 +96,7 @@ export function HeroSection() {
         <StoryInputComposer
           value={story}
           onValueChange={setStory}
-          placeholder="由一个想法或故事开始..."
+          placeholder={t("placeholder")}
           minRows={HOME_QUICK_START_MIN_ROWS}
           onCompositionStart={handleCompositionStart}
           onCompositionEnd={handleCompositionEnd}
@@ -102,7 +118,7 @@ export function HeroSection() {
               className="rounded-full text-primary hover:bg-primary/10 hover:text-primary"
             >
               <Sparkles className="text-primary" />
-              AI 帮我写
+              {t("aiHelp")}
             </Button>
           }
           primaryAction={
@@ -111,7 +127,7 @@ export function HeroSection() {
               onClick={handleStartCreate}
               className="rounded-full px-4 text-primary-foreground shadow-[0_6px_24px_-6px_color-mix(in_oklab,var(--primary)_70%,transparent)] hover:text-primary-foreground [--liquid-button-background-color:var(--primary)] [--liquid-button-color:color-mix(in_oklab,var(--primary)_75%,white)]"
             >
-              开始创作
+              {t("startCreate")}
               <ArrowRight />
             </LiquidButton>
           }
@@ -120,7 +136,7 @@ export function HeroSection() {
 
       <LongTextDetectionPrompt
         open={promptOpen}
-        copy={LONG_TEXT_PROMPT_COPY}
+        copy={longTextCopy}
         onClose={() => setPromptOpen(false)}
         onSmartSplit={handleSmartSplit}
         onContinue={handleContinueAnyway}

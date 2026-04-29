@@ -1,0 +1,50 @@
+{
+  "Nav": {
+    "home": "Home",
+    "workspace": "Workspace",
+    "inspiration": "Inspiration",
+    "assets": "Assets",
+    "settings": "Settings",
+    "mainNav": "Main navigation",
+    "backHome": "Back to home",
+    "language": "Language",
+    "switchLanguage": "Switch language",
+    "logs": "Logs",
+    "account": "Account"
+  },
+  "Hero": {
+    "title": "From idea to screen",
+    "subtitle": "Hand your stories to AI — split, storyboard, generate visuals, all the way to screen.",
+    "placeholder": "Start with an idea or a story...",
+    "aiHelp": "Let AI write",
+    "startCreate": "Start creating"
+  },
+  "Selectors": {
+    "style": {
+      "comic": "Comic",
+      "guoman": "Chinese animation",
+      "anime": "Japanese anime",
+      "realistic": "Realistic"
+    }
+  },
+  "RecentProjects": {
+    "title": "Recent projects",
+    "viewAll": "View all projects",
+    "createTitle": "Create new project",
+    "createSubtitle": "Start your creative journey",
+    "lastEdited": "Last edited {time}"
+  },
+  "LongTextPrompt": {
+    "title": "Long text detected",
+    "description": "Your input is fairly long. Generating directly may exceed the optimal length of a single story. We recommend letting AI split it into multiple segments for more reliable quality.",
+    "strongRecommend": "Highly recommended: use smart split to keep each segment in the sweet spot.",
+    "smartSplitLabel": "Smart split",
+    "smartSplitBadge": "Recommended",
+    "continueLabel": "Continue anyway",
+    "continueHint": "May affect generation quality"
+  },
+  "Languages": {
+    "zh": "中文",
+    "en": "English"
+  }
+}
