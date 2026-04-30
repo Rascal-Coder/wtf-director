@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { LiquidButton } from "@/components/animate-ui/components/buttons/liquid";
@@ -14,13 +13,14 @@ import { LampContainer } from "@/components/ui/lamp";
 import { useToast } from "@/contexts/ToastContext";
 import { apiFetch } from "@/lib/api-fetch";
 import { HOME_QUICK_START_MIN_ROWS } from "@/lib/ui/textarea-height";
-import { expandHomeStory } from "@/services/home/ai-story-expand";
 import { useRouter } from "@/i18n/navigation";
 import { createNovelPromotionProject } from "@/services/novel-promotion/client";
 
 import { LONG_TEXT_THRESHOLD } from "../_constants";
 import { ArtStyleSelector } from "./art-style-selector";
 import { VideoRatioSelector } from "./video-ratio-selector";
+
+type CreateMode = "ai-help" | "direct";
 
 export function HeroSection() {
   const t = useTranslations("Hero");
@@ -32,7 +32,7 @@ export function HeroSection() {
   const [videoRatio, setVideoRatio] = useState<string>("21:9");
   const [artStyle, setArtStyle] = useState<string>("comic");
   const [promptOpen, setPromptOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
+  const [creatingMode, setCreatingMode] = useState<CreateMode | null>(null);
   const isComposingRef = useRef(false);
 
   const handleCompositionStart = useCallback(() => {
@@ -43,36 +43,10 @@ export function HeroSection() {
     isComposingRef.current = false;
   }, []);
 
-  const expandMutation = useMutation({
-    mutationFn: (input: string) =>
-      expandHomeStory({
-        apiFetch,
-        prompt: input,
-        locale: locale === "en" ? "en" : "zh",
-      }),
-    onSuccess: (result) => {
-      setStory(result.expandedText);
-    },
-    onError: (err: unknown) => {
-      const detail = err instanceof Error ? err.message : String(err);
-      showToast(t("aiHelpFailed", { detail }), "error");
-    },
-  });
-
-  const handleAiHelp = useCallback(() => {
-    const trimmed = story.trim();
-    if (!trimmed) {
-      showToast(t("aiHelpEmpty"), "warning");
-      return;
-    }
-    if (expandMutation.isPending) return;
-    expandMutation.mutate(trimmed);
-  }, [story, expandMutation, showToast, t]);
-
   const doCreateProject = useCallback(
-    async (rawText: string) => {
-      if (isCreating) return;
-      setIsCreating(true);
+    async (rawText: string, mode: CreateMode) => {
+      if (creatingMode) return;
+      setCreatingMode(mode);
       try {
         const { projectId } = await createNovelPromotionProject({
           apiFetch,
@@ -80,16 +54,21 @@ export function HeroSection() {
           ratio: videoRatio,
           artStyle,
         });
-        router.push(`/novel-promotion/${projectId}`);
+        router.push(`/novel-promotion/${projectId}?mode=${mode}`);
       } catch (e) {
         const detail = e instanceof Error ? e.message : String(e);
         showToast(`创建项目失败：${detail}`, "error");
-      } finally {
-        setIsCreating(false);
+        setCreatingMode(null);
       }
     },
-    [isCreating, videoRatio, artStyle, router, showToast],
+    [creatingMode, videoRatio, artStyle, router, showToast],
   );
+
+  const handleAiHelp = useCallback(() => {
+    const trimmed = story.trim();
+    if (!trimmed) return;
+    void doCreateProject(trimmed, "ai-help");
+  }, [story, doCreateProject]);
 
   const handleStartCreate = useCallback(() => {
     const trimmed = story.trim();
@@ -98,18 +77,18 @@ export function HeroSection() {
       setPromptOpen(true);
       return;
     }
-    void doCreateProject(trimmed);
+    void doCreateProject(trimmed, "direct");
   }, [story, doCreateProject]);
 
   const handleSmartSplit = useCallback(() => {
     setPromptOpen(false);
     // TODO: 接入智能拆分（先走直接创作兜底）
-    void doCreateProject(story.trim());
+    void doCreateProject(story.trim(), "direct");
   }, [story, doCreateProject]);
 
   const handleContinueAnyway = useCallback(() => {
     setPromptOpen(false);
-    void doCreateProject(story.trim());
+    void doCreateProject(story.trim(), "direct");
   }, [story, doCreateProject]);
 
   const longTextCopy = useMemo(
@@ -125,8 +104,13 @@ export function HeroSection() {
     [tPrompt],
   );
 
-  const isExpanding = expandMutation.isPending;
-  const isBusy = isExpanding || isCreating;
+  void locale;
+
+  const hasContent = !!story.trim();
+  const isCreating = creatingMode !== null;
+  const isAiHelpCreating = creatingMode === "ai-help";
+  const isDirectCreating = creatingMode === "direct";
+  const disableButtons = isCreating || !hasContent;
 
   return (
     <section className="relative w-full">
@@ -162,7 +146,7 @@ export function HeroSection() {
           onValueChange={setStory}
           placeholder={t("placeholder")}
           minRows={HOME_QUICK_START_MIN_ROWS}
-          disabled={isBusy}
+          disabled={isCreating}
           onCompositionStart={handleCompositionStart}
           onCompositionEnd={handleCompositionEnd}
           className="bg-card/70 shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--primary)_45%,transparent)] ring-1 ring-border/60 backdrop-blur-xl"
@@ -182,32 +166,32 @@ export function HeroSection() {
               size="sm"
               type="button"
               onClick={handleAiHelp}
-              disabled={isBusy}
-              aria-busy={isExpanding}
+              disabled={disableButtons}
+              aria-busy={isAiHelpCreating}
               className="rounded-full text-primary hover:bg-primary/10 hover:text-primary"
             >
               <AppIcon
-                name={isExpanding ? "loader" : "sparkles"}
+                name={isAiHelpCreating ? "loader" : "sparkles"}
                 className={
-                  isExpanding ? "animate-spin text-primary" : "text-primary"
+                  isAiHelpCreating ? "animate-spin text-primary" : "text-primary"
                 }
               />
-              {isExpanding ? t("aiHelpLoading") : t("aiHelp")}
+              {t("aiHelp")}
             </Button>
           }
           primaryAction={
             <LiquidButton
               size="sm"
               onClick={handleStartCreate}
-              disabled={isBusy}
-              aria-busy={isCreating}
+              disabled={disableButtons}
+              aria-busy={isDirectCreating}
               className="rounded-full px-4 text-primary-foreground shadow-[0_6px_24px_-6px_color-mix(in_oklab,var(--primary)_70%,transparent)] hover:text-primary-foreground [--liquid-button-background-color:var(--primary)] [--liquid-button-color:color-mix(in_oklab,var(--primary)_75%,white)]"
             >
-              {isCreating ? (
+              {isDirectCreating ? (
                 <AppIcon name="loader" className="animate-spin" />
               ) : null}
               {t("startCreate")}
-              {!isCreating && <AppIcon name="arrowRight" />}
+              {!isDirectCreating && <AppIcon name="arrowRight" />}
             </LiquidButton>
           }
         />

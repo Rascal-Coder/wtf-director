@@ -139,6 +139,29 @@
       "createFailed": "创建项目失败：{detail}",
       "loadFailed": "加载项目失败：{detail}",
       "streamFailed": "进度连接失败：{detail}"
+    },
+    "untitled": "未命名项目",
+    "placeholder": {
+      "title": "Start!",
+      "subtitle": "请通过右侧聊天框开始创作"
+    },
+    "chat": {
+      "header": "Chat",
+      "inputPlaceholder": "请输入你的消息...",
+      "askGenreTitle": "想往哪个方向扩写？请选择一种风格：",
+      "genreHintPrefix": "风格",
+      "genre": {
+        "xianxia": "仙侠",
+        "xuanhuan": "玄幻",
+        "urban": "都市",
+        "guoFeng": "古风",
+        "sciFi": "科幻",
+        "freeform": "自由发挥"
+      },
+      "expanding": "正在按【{label}】帮你扩写...",
+      "expandFailed": "扩写失败：{detail}",
+      "startNotice": "收到，开始为你分析剧情...",
+      "pipelineError": "处理出错：{detail}"
     }
   }
 }

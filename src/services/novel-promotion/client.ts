@@ -90,6 +90,27 @@ export interface ProjectDetail {
   } | null;
 }
 
+export async function updateNovelPromotionRawText({
+  apiFetch,
+  projectId,
+  rawText,
+}: {
+  apiFetch: ApiFetchLike;
+  projectId: string;
+  rawText: string;
+}): Promise<void> {
+  const res = await apiFetch(`/api/novel-promotion/${projectId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rawText }),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as ErrorBody;
+    const detail = data.message ?? res.statusText;
+    throw new Error(data.error ? `${data.error}: ${detail}` : detail);
+  }
+}
+
 export async function getNovelPromotionProject({
   apiFetch,
   projectId,

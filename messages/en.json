@@ -139,6 +139,29 @@
       "createFailed": "Create project failed: {detail}",
       "loadFailed": "Load project failed: {detail}",
       "streamFailed": "Stream connection failed: {detail}"
+    },
+    "untitled": "Untitled",
+    "placeholder": {
+      "title": "Start!",
+      "subtitle": "Use the chat panel on the right to begin creating."
+    },
+    "chat": {
+      "header": "Chat",
+      "inputPlaceholder": "Type a message...",
+      "askGenreTitle": "Which direction should we expand toward?",
+      "genreHintPrefix": "Style",
+      "genre": {
+        "xianxia": "Xianxia",
+        "xuanhuan": "Fantasy",
+        "urban": "Urban",
+        "guoFeng": "Ancient",
+        "sciFi": "Sci-Fi",
+        "freeform": "Freeform"
+      },
+      "expanding": "Expanding in [{label}] style...",
+      "expandFailed": "Expansion failed: {detail}",
+      "startNotice": "Got it. Starting analysis...",
+      "pipelineError": "Pipeline error: {detail}"
     }
   }
 }

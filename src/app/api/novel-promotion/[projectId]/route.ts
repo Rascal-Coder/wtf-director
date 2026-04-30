@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db/prisma";
 
+interface PatchBody {
+  rawText?: string;
+}
+
 function safeParse<T>(input: string | null): T | null {
   if (!input) return null;
   try {
@@ -88,4 +92,55 @@ export async function GET(
         }
       : null,
   });
+}
+
+export async function PATCH(
+  request: NextRequest,
+  ctx: { params: Promise<{ projectId: string }> },
+) {
+  const { projectId } = await ctx.params;
+  const body = (await request.json().catch(() => ({}))) as PatchBody;
+
+  const rawText = typeof body.rawText === "string" ? body.rawText.trim() : "";
+  if (!rawText) {
+    return NextResponse.json(
+      { error: "INVALID_INPUT", message: "rawText is required" },
+      { status: 400 },
+    );
+  }
+
+  const project = await prisma.novelPromotionProject.findUnique({
+    where: { id: projectId },
+    include: { episodes: { orderBy: { index: "asc" }, take: 1 } },
+  });
+
+  if (!project || !project.episodes[0]) {
+    return NextResponse.json(
+      { error: "NOT_FOUND", message: "project or episode not found" },
+      { status: 404 },
+    );
+  }
+
+  const episode = project.episodes[0];
+
+  const running = await prisma.workflowRun.findFirst({
+    where: {
+      episodeId: episode.id,
+      type: "story_to_script_run",
+      status: { in: ["queued", "running"] },
+    },
+  });
+  if (running) {
+    return NextResponse.json(
+      { error: "RUN_IN_PROGRESS", message: "pipeline already running" },
+      { status: 409 },
+    );
+  }
+
+  await prisma.novelPromotionEpisode.update({
+    where: { id: episode.id },
+    data: { rawText },
+  });
+
+  return NextResponse.json({ ok: true, episodeId: episode.id });
 }
