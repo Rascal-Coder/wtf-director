@@ -1,5 +1,4 @@
 import { completeChatJson } from "@/lib/ai/json";
-import type { ChatStreamHandler } from "@/lib/ai/openai-compatible";
 import {
   type PromptLocale,
   renderChatPromptWithVars,
@@ -20,7 +19,6 @@ const CATEGORY = "novel-promotion";
 export async function analyzeCharacters(
   rawText: string,
   locale: PromptLocale,
-  onDelta?: ChatStreamHandler,
 ): Promise<CharacterEntry[]> {
   const { system, user } = await renderChatPromptWithVars(
     CATEGORY,
@@ -34,9 +32,10 @@ export async function analyzeCharacters(
       { role: "user", content: user },
     ],
     {
-      onDelta,
       validate: (v) =>
-        !!v && typeof v === "object" && Array.isArray((v as { characters?: unknown }).characters),
+        !!v &&
+        typeof v === "object" &&
+        Array.isArray((v as { characters?: unknown }).characters),
     },
   );
   return (parsed.characters ?? []).filter(
@@ -48,7 +47,6 @@ export async function analyzeCharacters(
 export async function analyzeLocations(
   rawText: string,
   locale: PromptLocale,
-  onDelta?: ChatStreamHandler,
 ): Promise<LocationEntry[]> {
   const { system, user } = await renderChatPromptWithVars(
     CATEGORY,
@@ -62,9 +60,10 @@ export async function analyzeLocations(
       { role: "user", content: user },
     ],
     {
-      onDelta,
       validate: (v) =>
-        !!v && typeof v === "object" && Array.isArray((v as { locations?: unknown }).locations),
+        !!v &&
+        typeof v === "object" &&
+        Array.isArray((v as { locations?: unknown }).locations),
     },
   );
   return (parsed.locations ?? []).filter(
@@ -76,7 +75,6 @@ export async function analyzeLocations(
 export async function analyzeProps(
   rawText: string,
   locale: PromptLocale,
-  onDelta?: ChatStreamHandler,
 ): Promise<PropEntry[]> {
   const { system, user } = await renderChatPromptWithVars(
     CATEGORY,
@@ -90,9 +88,10 @@ export async function analyzeProps(
       { role: "user", content: user },
     ],
     {
-      onDelta,
       validate: (v) =>
-        !!v && typeof v === "object" && Array.isArray((v as { props?: unknown }).props),
+        !!v &&
+        typeof v === "object" &&
+        Array.isArray((v as { props?: unknown }).props),
     },
   );
   return (parsed.props ?? []).filter(
@@ -138,9 +137,8 @@ export async function splitClips(args: {
   characters: CharacterEntry[];
   locations: LocationEntry[];
   props: PropEntry[];
-  onDelta?: ChatStreamHandler;
 }): Promise<ClipEntry[]> {
-  const { rawText, locale, characters, locations, props, onDelta } = args;
+  const { rawText, locale, characters, locations, props } = args;
 
   const { system, user } = await renderChatPromptWithVars(
     CATEGORY,
@@ -156,17 +154,18 @@ export async function splitClips(args: {
       { role: "user", content: user },
     ],
     {
-      onDelta,
       validate: (v) =>
-        !!v && typeof v === "object" && Array.isArray((v as { clips?: unknown }).clips),
+        !!v &&
+        typeof v === "object" &&
+        Array.isArray((v as { clips?: unknown }).clips),
     },
   );
 
   const matcher = createClipContentMatcher(rawText);
   const seenIds = new Set<string>();
   const out: ClipEntry[] = [];
-
   let cursor = 0;
+
   for (let i = 0; i < (parsed.clips ?? []).length; i++) {
     const raw = parsed.clips![i];
     if (
@@ -210,9 +209,8 @@ export async function splitClips(args: {
 export async function convertClipToScreenplay(args: {
   clip: ClipEntry;
   locale: PromptLocale;
-  onDelta?: ChatStreamHandler;
 }): Promise<ScreenplayResult> {
-  const { clip, locale, onDelta } = args;
+  const { clip, locale } = args;
   try {
     const { system, user } = await renderChatPromptWithVars(
       CATEGORY,
@@ -241,9 +239,10 @@ export async function convertClipToScreenplay(args: {
         { role: "user", content: user },
       ],
       {
-        onDelta,
         validate: (v) =>
-          !!v && typeof v === "object" && Array.isArray((v as { scenes?: unknown }).scenes),
+          !!v &&
+          typeof v === "object" &&
+          Array.isArray((v as { scenes?: unknown }).scenes),
       },
     );
 

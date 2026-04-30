@@ -1,27 +1,20 @@
-import {
-  completeChat,
-  streamChat,
-  type ChatCompletionMessage,
-  type ChatStreamHandler,
-} from "./openai-compatible";
+import { completeChat, streamChat, type ChatCompletionMessage } from "./openai-compatible";
 
 /**
- * 从 LLM 返回里抽出第一段合法 JSON。LLM 经常会在外面包 markdown 代码块或前后散文。
+ * 从 LLM 返回里抽出第一段合法 JSON。
  */
 export function extractJson(raw: string): string {
   const trimmed = raw.trim();
 
   const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenceMatch?.[1]) {
-    return fenceMatch[1].trim();
-  }
+  if (fenceMatch?.[1]) return fenceMatch[1].trim();
 
   const firstBrace = trimmed.indexOf("{");
   const firstBracket = trimmed.indexOf("[");
-  const startCandidates = [firstBrace, firstBracket].filter((i) => i >= 0);
-  if (startCandidates.length === 0) return trimmed;
+  const candidates = [firstBrace, firstBracket].filter((i) => i >= 0);
+  if (candidates.length === 0) return trimmed;
 
-  const start = Math.min(...startCandidates);
+  const start = Math.min(...candidates);
   const startChar = trimmed[start];
   const endChar = startChar === "{" ? "}" : "]";
 
@@ -31,43 +24,31 @@ export function extractJson(raw: string): string {
   for (let i = start; i < trimmed.length; i++) {
     const ch = trimmed[i];
     if (inString) {
-      if (escape) {
-        escape = false;
-      } else if (ch === "\\") {
-        escape = true;
-      } else if (ch === '"') {
-        inString = false;
-      }
+      if (escape) escape = false;
+      else if (ch === "\\") escape = true;
+      else if (ch === '"') inString = false;
       continue;
     }
-    if (ch === '"') {
-      inString = true;
-      continue;
-    }
+    if (ch === '"') { inString = true; continue; }
     if (ch === startChar) depth++;
     else if (ch === endChar) {
       depth--;
-      if (depth === 0) {
-        return trimmed.slice(start, i + 1);
-      }
+      if (depth === 0) return trimmed.slice(start, i + 1);
     }
   }
-
   return trimmed;
 }
 
 export interface CompleteChatJsonOptions {
   retries?: number;
   validate?: (parsed: unknown) => boolean;
-  /**
-   * 若提供，则采用 streamText 并把 token delta 实时回调出去。
-   * 重试轮（如有）不再回调。
-   */
-  onDelta?: ChatStreamHandler;
 }
 
 /**
  * 调用 LLM 并解析 JSON，失败时让 LLM 自我修正再试。
+ *
+ * - 首轮：使用 streamChat（会通过 AsyncLocalStorage 把 chunk 路由到当前上下文的回调）
+ * - 重试轮：使用 completeChat（静默，避免把旧 chunk 重复推到前端）
  */
 export async function completeChatJson<T = unknown>(
   messages: ChatCompletionMessage[],
@@ -90,14 +71,9 @@ export async function completeChatJson<T = unknown>(
       });
     }
 
-    let raw = "";
     try {
-      // 仅首轮使用流式（让前端看到"打字"效果）；重试用普通同步以避免重复 delta。
-      if (attempt === 0 && options.onDelta) {
-        raw = await streamChat(turn, options.onDelta);
-      } else {
-        raw = await completeChat(turn);
-      }
+      // 首轮用流式（前端能看到打字效果）；重试用非流式（避免重复 chunk）
+      const raw = attempt === 0 ? await streamChat(turn) : await completeChat(turn);
       lastRaw = raw;
       const cleaned = extractJson(raw);
       const parsed = JSON.parse(cleaned) as T;

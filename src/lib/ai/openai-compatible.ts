@@ -1,95 +1,143 @@
 /**
- * 通过 Vercel AI SDK 调用 OpenAI 兼容的 Chat Completions 接口
- * （OpenAI、Azure、多数国内中转网关等）。
+ * 基于 Vercel AI SDK 的 LLM 调用层。
  *
- * 仅依赖 `ai` 与 `@ai-sdk/openai`，通过环境变量配置：
- * - OPENAI_API_KEY  必填
- * - OPENAI_BASE_URL 可选，默认 https://api.openai.com/v1
- * - OPENAI_MODEL    可选，默认 gpt-4o-mini
+ * 通过 `@ai-sdk/openai-compatible` 适配任意 OpenAI 兼容服务，
+ * 并自动识别两类常见的"思考过程"输出：
  *
- * 使用 `provider.chat(modelId)` 而不是默认的 `provider(modelId)`，
- * 因为大量第三方 OpenAI 兼容服务只实现了 `/chat/completions`，
- * 不支持新的 `/responses` 端点。
+ *   1) DeepSeek-V3/R1 / 通义 / 智谱 / xAI 等
+ *      → SSE delta 中的 `reasoning_content` 字段
+ *      → openai-compatible provider 已原生映射为 `reasoning-delta`
+ *
+ *   2) QwQ / 部分推理模型
+ *      → 在 `content` 中内嵌 `<think>...</think>`
+ *      → 由 `extractReasoningMiddleware({ tagName: 'think' })` 提取
+ *
+ * 想换其他 provider（Anthropic / Google / OpenAI 原生）时，
+ * 只需替换 `buildModel` 内的工厂函数即可，上层 streamChat 接口不变。
+ *
+ * 环境变量：
+ *   OPENAI_API_KEY   必填
+ *   OPENAI_BASE_URL  可选，默认 https://api.openai.com/v1
+ *   OPENAI_MODEL     可选，默认 gpt-4o-mini
+ *
+ * 流式输出通过 AsyncLocalStorage 透明路由到 LLM 层（chat-stream.ts）。
  */
 
-import { createOpenAI } from '@ai-sdk/openai'
-import { generateText, streamText } from 'ai'
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import {
+  extractReasoningMiddleware,
+  generateText,
+  streamText,
+  wrapLanguageModel,
+  type LanguageModel,
+} from "ai";
+
+import { emitStreamChunk } from "@/lib/llm/chat-stream";
 
 export interface ChatCompletionMessage {
-  role: 'system' | 'user' | 'assistant'
-  content: string
+  role: "system" | "user" | "assistant";
+  content: string;
 }
-
-export type ChatStreamHandler = (delta: string) => void | Promise<void>
 
 function resolveBaseUrl(): string {
-  const raw = process.env.OPENAI_BASE_URL?.trim()
-  if (raw) return raw.replace(/\/$/, '')
-  return 'https://api.openai.com/v1'
+  const raw = process.env.OPENAI_BASE_URL?.trim();
+  if (raw) return raw.replace(/\/$/, "");
+  return "https://api.openai.com/v1";
 }
 
-function getProvider() {
-  const apiKey = process.env.OPENAI_API_KEY?.trim()
-  if (!apiKey) {
-    throw new Error('OPENAI_API_KEY is not configured')
-  }
-  return createOpenAI({
-    apiKey,
-    baseURL: resolveBaseUrl(),
-  })
+function getApiKey(): string {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
+  return apiKey;
 }
 
 function getModelId(): string {
-  return process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini'
+  return process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
 }
 
-export async function completeChat(messages: ChatCompletionMessage[]): Promise<string> {
-  const provider = getProvider()
+let _cachedModel: LanguageModel | null = null;
+let _cachedKey: string | null = null;
 
+function buildModel(): LanguageModel {
+  const cacheKey = `${resolveBaseUrl()}::${getModelId()}::${getApiKey()}`;
+  if (_cachedModel && _cachedKey === cacheKey) return _cachedModel;
+
+  const provider = createOpenAICompatible({
+    name: "wtf-director",
+    apiKey: getApiKey(),
+    baseURL: resolveBaseUrl(),
+  });
+
+  // 用 middleware 兜底处理"在正文里嵌 <think> 标签"的模型；
+  // 对于已经走 reasoning_content 字段的模型不会有副作用。
+  const wrapped = wrapLanguageModel({
+    model: provider.chatModel(getModelId()),
+    middleware: extractReasoningMiddleware({ tagName: "think" }),
+  });
+
+  _cachedModel = wrapped;
+  _cachedKey = cacheKey;
+  return wrapped;
+}
+
+/** 非流式调用（重试时使用），不触发 stream 回调 */
+export async function completeChat(
+  messages: ChatCompletionMessage[],
+): Promise<string> {
   const { text } = await generateText({
-    model: provider.chat(getModelId()),
+    model: buildModel(),
     messages,
     temperature: 0.7,
-  })
-
-  const trimmed = text?.trim() ?? ''
-  if (!trimmed) {
-    throw new Error('Empty model response')
-  }
-
-  return trimmed
+  });
+  const trimmed = text?.trim() ?? "";
+  if (!trimmed) throw new Error("Empty model response");
+  return trimmed;
 }
 
 /**
- * 流式调用，每收到一段 delta 就回调 onDelta。
- * 等流读完后返回完整文本。
+ * 流式调用。
+ *
+ * 消费 AI SDK 的 `fullStream`：
+ *   - `text-delta`      → text 通道（最终输出，用于 JSON 解析）
+ *   - `reasoning-delta` → reasoning 通道（思考过程）
+ *
+ * 返回值是完整的 text（不含 reasoning），用于后续 JSON 解析。
  */
 export async function streamChat(
   messages: ChatCompletionMessage[],
-  onDelta: ChatStreamHandler,
 ): Promise<string> {
-  const provider = getProvider()
-
   const result = streamText({
-    model: provider.chat(getModelId()),
+    model: buildModel(),
     messages,
     temperature: 0.7,
-  })
+  });
 
-  let accumulated = ''
-  for await (const delta of result.textStream) {
-    if (!delta) continue
-    accumulated += delta
-    try {
-      await onDelta(delta)
-    } catch {
-      // onDelta 异常不阻塞
+  let textAcc = "";
+
+  for await (const part of result.fullStream) {
+    const p = part as unknown as {
+      type: string;
+      text?: string;
+      delta?: string;
+      error?: unknown;
+    };
+
+    if (p.type === "text-delta") {
+      const delta = p.text ?? p.delta ?? "";
+      if (!delta) continue;
+      textAcc += delta;
+      await emitStreamChunk("text", delta);
+    } else if (p.type === "reasoning-delta") {
+      const delta = p.text ?? p.delta ?? "";
+      if (delta) await emitStreamChunk("reasoning", delta);
+    } else if (p.type === "error") {
+      throw p.error instanceof Error
+        ? p.error
+        : new Error(String(p.error ?? "stream error"));
     }
   }
 
-  const trimmed = accumulated.trim()
-  if (!trimmed) {
-    throw new Error('Empty model response')
-  }
-  return trimmed
+  const trimmed = textAcc.trim();
+  if (!trimmed) throw new Error("Empty model response");
+  return trimmed;
 }

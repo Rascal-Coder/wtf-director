@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "motion/react";
@@ -9,7 +9,6 @@ import { useToast } from "@/contexts/ToastContext";
 import { apiFetch } from "@/lib/api-fetch";
 import { useStoryToScriptStream } from "@/hooks/use-story-to-script-stream";
 import { getNovelPromotionProject } from "@/services/novel-promotion/client";
-import type { ClipDetail } from "@/services/novel-promotion/client";
 
 import { StageInput } from "./_components/stage-input";
 import { StageRunning } from "./_components/stage-running";
@@ -21,18 +20,24 @@ interface PageProps {
   params: Promise<{ projectId: string; locale: string }>;
 }
 
+function deriveStage(phase: ReturnType<typeof useStoryToScriptStream>["state"]["phase"]): Stage {
+  if (phase === "connecting" || phase === "running" || phase === "error") return "running";
+  if (phase === "done") return "done";
+  return "input";
+}
+
 export default function NovelPromotionProjectPage({ params }: PageProps) {
   const { projectId } = use(params);
   const locale = useLocale();
   const { showToast } = useToast();
   const t = useTranslations("NovelPromotion");
 
-  const [stage, setStage] = useState<Stage>("input");
-  const [clips, setClips] = useState<ClipDetail[]>([]);
-  const [clipCount, setClipCount] = useState(0);
-  const [successCount, setSuccessCount] = useState(0);
-
-  const { data: projectData, isError: isLoadError, error: loadError } = useQuery({
+  const {
+    data: projectData,
+    isError: isLoadError,
+    error: loadError,
+    refetch: refetchProject,
+  } = useQuery({
     queryKey: ["novel-promotion-project", projectId],
     queryFn: () => getNovelPromotionProject({ apiFetch, projectId }),
     staleTime: 30_000,
@@ -48,39 +53,15 @@ export default function NovelPromotionProjectPage({ params }: PageProps) {
   const { state: streamState, start: startStream, abort: abortStream } =
     useStoryToScriptStream(projectId);
 
-  // Sync stream phase → stage
-  useEffect(() => {
-    if (streamState.phase === "connecting" || streamState.phase === "running") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStage("running");
-    } else if (streamState.phase === "done") {
-      setStage("done");
-      if (streamState.result) {
-        setClipCount(streamState.result.clipCount);
-        setSuccessCount(streamState.result.screenplaySuccessCount);
-      }
-    } else if (streamState.phase === "error") {
-      setStage("running"); // stay on running stage to show error state
-    }
-  }, [streamState.phase, streamState.result]);
-
-  // Refresh clips when done
-  const { refetch: refetchProject } = useQuery({
-    queryKey: ["novel-promotion-project", projectId],
-    queryFn: () => getNovelPromotionProject({ apiFetch, projectId }),
-    enabled: false,
-  });
+  const stage = deriveStage(streamState.phase);
+  const clipCount = streamState.result?.clipCount ?? 0;
+  const successCount = streamState.result?.screenplaySuccessCount ?? 0;
 
   useEffect(() => {
     if (streamState.phase === "done") {
-      refetchProject().then(({ data }) => {
-        if (data?.episode?.clips) {
-          setClips(data.episode.clips);
-        }
-      });
+      refetchProject();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [streamState.phase]);
+  }, [streamState.phase, refetchProject]);
 
   const handleStart = useCallback(
     (_text: string) => {
@@ -166,7 +147,7 @@ export default function NovelPromotionProjectPage({ params }: PageProps) {
               <StageDone
                 clipCount={clipCount}
                 screenplaySuccessCount={successCount}
-                clips={clips.length > 0 ? clips : (projectData?.episode?.clips ?? [])}
+                clips={projectData?.episode?.clips ?? []}
                 onCreateNew={handleCreateNew}
               />
             </motion.div>

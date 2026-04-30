@@ -64,7 +64,13 @@ export type ProgressEvent =
   | { type: "log"; level: "info" | "warn" | "error"; message: string }
   | { type: "step.done"; step: string; data?: unknown }
   | { type: "stream.start"; substep: SubstepMeta }
-  | { type: "stream.delta"; substep: string; delta: string }
+  | {
+      type: "stream.delta";
+      substep: string;
+      /** 'text' = 模型最终输出；'reasoning' = 思考过程 token */
+      kind: "text" | "reasoning";
+      delta: string;
+    }
   | {
       type: "stream.end";
       substep: string;

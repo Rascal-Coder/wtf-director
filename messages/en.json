@@ -94,11 +94,14 @@
       },
       "panel": {
         "streaming": "Live output",
+        "tabReasoning": "Thinking",
+        "tabOutput": "Output",
         "finalResult": "Final result",
         "chars": "chars",
         "waiting": "Waiting for model output...",
         "noOutput": "No output",
         "waitingTokens": "Waiting for first token...",
+        "waitingReasoning": "Waiting for reasoning tokens...",
         "emptyTitle": "Waiting for first task",
         "emptyHint": "Pick a substep on the left to inspect",
         "failed": "Task failed"

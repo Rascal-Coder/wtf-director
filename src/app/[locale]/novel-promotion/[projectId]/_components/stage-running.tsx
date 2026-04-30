@@ -433,34 +433,59 @@ function statusHint(
   return t("pending");
 }
 
+type StreamTab = "reasoning" | "text";
+
 function SubstepPanel({ substep }: { substep: SubstepState }) {
   const t = useTranslations("NovelPromotion.stageRunning");
-  const streamRef = useRef<HTMLDivElement>(null);
-  const [now, setNow] = useState(() => Date.now());
+  const reasoningRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const [now, setNow] = useState(() => substep.startedAt);
+  const hasReasoning = substep.reasoning.length > 0;
 
+  // 默认显示输出 tab；首次出现 reasoning 时自动切到思考 tab
+  const [tab, setTab] = useState<StreamTab>("text");
+  const prevHadReasoning = useRef(false);
   useEffect(() => {
-    const el = streamRef.current;
-    if (!el) return;
-    el.scrollTop = el.scrollHeight;
-  }, [substep.text.length]);
+    if (!prevHadReasoning.current && hasReasoning) {
+      prevHadReasoning.current = true;
+      setTab("reasoning");
+    }
+  }, [hasReasoning]);
 
-  // 流式中每 250ms 触发一次时长刷新
+  // 流式中每 200ms 刷新时长
   useEffect(() => {
     if (substep.status !== "streaming") return;
-    const id = setInterval(() => setNow(Date.now()), 250);
+    const id = setInterval(() => setNow(Date.now()), 200);
     return () => clearInterval(id);
   }, [substep.status]);
 
+  // 各 tab 内容自动滚到底
+  useEffect(() => {
+    if (tab === "reasoning") {
+      const el = reasoningRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    }
+  }, [substep.reasoning.length, tab]);
+  useEffect(() => {
+    if (tab === "text") {
+      const el = textRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    }
+  }, [substep.text.length, tab]);
+
   const elapsed = (substep.endedAt ?? now) - substep.startedAt;
   const elapsedSec = Math.max(0, Math.round(elapsed / 100) / 10);
+  const isStreaming = substep.status === "streaming";
 
   return (
     <div className="flex flex-col gap-3">
-      {/* AI 实时输出 */}
+      {/* 主面板：思考 / 输出 */}
       <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-        <div className="flex items-center gap-2 border-b bg-muted/30 px-4 py-2.5">
-          <span className="relative flex size-2">
-            {substep.status === "streaming" ? (
+        {/* 顶栏 */}
+        <div className="flex items-center gap-1 border-b bg-muted/30 px-3 py-2">
+          {/* 状态点 */}
+          <span className="relative mr-1 flex size-2 shrink-0">
+            {isStreaming ? (
               <>
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-primary" />
@@ -478,38 +503,112 @@ function SubstepPanel({ substep }: { substep: SubstepState }) {
               />
             )}
           </span>
-          <h3 className="text-sm font-semibold">
-            {t("panel.streaming")}
-            <span className="ml-2 font-normal text-muted-foreground">·</span>
-            <span className="ml-2 font-medium">{substep.title}</span>
-          </h3>
-          <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
-            {substep.text.length.toLocaleString()} {t("panel.chars")} · {elapsedSec}s
+
+          {/* tabs */}
+          {hasReasoning && (
+            <button
+              type="button"
+              onClick={() => setTab("reasoning")}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                tab === "reasoning"
+                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                  : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              <AppIcon name="brain" className="size-3.5" />
+              {t("panel.tabReasoning")}
+              <span className="tabular-nums opacity-60">
+                {substep.reasoning.length.toLocaleString()}
+              </span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setTab("text")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+              tab === "text"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted",
+            )}
+          >
+            <AppIcon name="terminal" className="size-3.5" />
+            {t("panel.tabOutput")}
+            <span className="tabular-nums opacity-60">
+              {substep.text.length.toLocaleString()}
+            </span>
+          </button>
+
+          <span className="ml-auto shrink-0 text-[11px] tabular-nums text-muted-foreground">
+            {substep.title} · {elapsedSec}s
           </span>
         </div>
-        <div
-          ref={streamRef}
-          className="max-h-[28rem] min-h-[10rem] overflow-y-auto px-4 py-3 font-mono text-xs leading-relaxed"
-        >
-          {substep.text ? (
-            <pre className="whitespace-pre-wrap wrap-break-word text-foreground/90">
-              {substep.text}
-              {substep.status === "streaming" && (
-                <motion.span
-                  animate={{ opacity: [1, 0.2, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  className="ml-0.5 inline-block h-3 w-1.5 -mb-0.5 bg-primary align-baseline"
-                />
-              )}
-            </pre>
+
+        {/* 内容区 */}
+        <AnimatePresence mode="wait" initial={false}>
+          {tab === "reasoning" ? (
+            <motion.div
+              key="reasoning"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <div
+                ref={reasoningRef}
+                className="max-h-112 min-h-40 overflow-y-auto px-4 py-3 font-mono text-xs leading-relaxed"
+              >
+                {substep.reasoning ? (
+                  <pre className="whitespace-pre-wrap wrap-break-word text-amber-700 dark:text-amber-300">
+                    {substep.reasoning}
+                    {isStreaming && (
+                      <motion.span
+                        animate={{ opacity: [1, 0.2, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="-mb-0.5 ml-0.5 inline-block h-3 w-1.5 bg-amber-500 align-baseline"
+                      />
+                    )}
+                  </pre>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {isStreaming ? t("panel.waitingReasoning") : t("panel.noOutput")}
+                  </p>
+                )}
+              </div>
+            </motion.div>
           ) : (
-            <p className="text-muted-foreground">
-              {substep.status === "streaming"
-                ? t("panel.waitingTokens")
-                : t("panel.noOutput")}
-            </p>
+            <motion.div
+              key="text"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <div
+                ref={textRef}
+                className="max-h-112 min-h-40 overflow-y-auto px-4 py-3 font-mono text-xs leading-relaxed"
+              >
+                {substep.text ? (
+                  <pre className="whitespace-pre-wrap wrap-break-word text-foreground/90">
+                    {substep.text}
+                    {isStreaming && (
+                      <motion.span
+                        animate={{ opacity: [1, 0.2, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="-mb-0.5 ml-0.5 inline-block h-3 w-1.5 bg-primary align-baseline"
+                      />
+                    )}
+                  </pre>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {isStreaming ? t("panel.waitingTokens") : t("panel.noOutput")}
+                  </p>
+                )}
+              </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
       {/* 最终结果 */}
@@ -600,7 +699,7 @@ function FinalResultContent({ substep }: { substep: SubstepState }) {
             key={it.id}
             className="flex items-start gap-2 rounded-md bg-muted/40 px-2 py-1.5 text-xs"
           >
-            <span className="mt-[1px] flex size-4 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold tabular-nums text-primary">
+            <span className="mt-px flex size-4 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold tabular-nums text-primary">
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">
@@ -635,7 +734,7 @@ function FinalResultContent({ substep }: { substep: SubstepState }) {
             key={i}
             className="flex items-start gap-2 rounded-md bg-muted/40 px-2 py-1.5 text-xs"
           >
-            <span className="mt-[1px] flex size-4 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold tabular-nums text-primary">
+            <span className="mt-px flex size-4 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold tabular-nums text-primary">
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">
@@ -663,7 +762,7 @@ function EmptySubstepPanel({
 }) {
   const t = useTranslations("NovelPromotion.stageRunning.panel");
   return (
-    <div className="flex min-h-[16rem] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed bg-card/40 p-8 text-center shadow-sm">
+    <div className="flex min-h-64 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed bg-card/40 p-8 text-center shadow-sm">
       {isError ? (
         <>
           <AppIcon name="alert" className="size-8 text-destructive" />

@@ -94,11 +94,14 @@
       },
       "panel": {
         "streaming": "AI 实时输出",
+        "tabReasoning": "思考过程",
+        "tabOutput": "模型输出",
         "finalResult": "最终结果",
         "chars": "字",
         "waiting": "等待模型输出...",
         "noOutput": "暂无输出",
-        "waitingTokens": "正在等待第一个 token...",
+        "waitingTokens": "等待第一个 token...",
+        "waitingReasoning": "等待思考 token...",
         "emptyTitle": "等待 AI 开始第一个任务",
         "emptyHint": "可以从左侧选择查看任意子任务",
         "failed": "任务失败"

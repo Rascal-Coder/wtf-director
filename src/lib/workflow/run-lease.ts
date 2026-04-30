@@ -25,10 +25,15 @@ export async function acquireRunLease(runId: string): Promise<boolean> {
   return result.count === 1;
 }
 
+/**
+ * 仅在 lease 未过期时续租。如果别的 worker 已经抢走（或我自己已经被释放），
+ * 这次 update 会更新 0 行 → 静默不报错，下一轮定时器再试或被 clearInterval 停掉。
+ */
 export async function renewLease(runId: string) {
-  await prisma.workflowRun.update({
-    where: { id: runId },
-    data: { leaseUntil: new Date(Date.now() + LEASE_DURATION_MS) },
+  const now = new Date();
+  await prisma.workflowRun.updateMany({
+    where: { id: runId, leaseUntil: { gt: now } },
+    data: { leaseUntil: new Date(now.getTime() + LEASE_DURATION_MS) },
   });
 }
 

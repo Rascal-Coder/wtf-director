@@ -20,51 +20,60 @@ export async function persistAnalysis(args: {
   const { episodeId, characters, locations, props, charactersIntroduction } = args;
 
   await prisma.$transaction(async (tx) => {
-    for (const c of characters) {
-      const exist = await tx.novelPromotionCharacter.findUnique({
-        where: { episodeId_libName: { episodeId, libName: c.libName } },
+    if (characters.length > 0) {
+      const existing = await tx.novelPromotionCharacter.findMany({
+        where: { episodeId, libName: { in: characters.map((c) => c.libName) } },
+        select: { libName: true },
       });
-      if (!exist) {
-        await tx.novelPromotionCharacter.create({
-          data: {
+      const seen = new Set(existing.map((e) => e.libName));
+      const toCreate = characters.filter((c) => !seen.has(c.libName));
+      if (toCreate.length > 0) {
+        await tx.novelPromotionCharacter.createMany({
+          data: toCreate.map((c) => ({
             id: nanoid(),
             episodeId,
             libName: c.libName,
             description: c.description ?? null,
             attributes: c.aliases ? JSON.stringify({ aliases: c.aliases }) : null,
-          },
+          })),
         });
       }
     }
 
-    for (const l of locations) {
-      const exist = await tx.novelPromotionLocation.findUnique({
-        where: { episodeId_libName: { episodeId, libName: l.libName } },
+    if (locations.length > 0) {
+      const existing = await tx.novelPromotionLocation.findMany({
+        where: { episodeId, libName: { in: locations.map((l) => l.libName) } },
+        select: { libName: true },
       });
-      if (!exist) {
-        await tx.novelPromotionLocation.create({
-          data: {
+      const seen = new Set(existing.map((e) => e.libName));
+      const toCreate = locations.filter((l) => !seen.has(l.libName));
+      if (toCreate.length > 0) {
+        await tx.novelPromotionLocation.createMany({
+          data: toCreate.map((l) => ({
             id: nanoid(),
             episodeId,
             libName: l.libName,
             description: l.description ?? null,
-          },
+          })),
         });
       }
     }
 
-    for (const p of props) {
-      const exist = await tx.novelPromotionProp.findUnique({
-        where: { episodeId_libName: { episodeId, libName: p.libName } },
+    if (props.length > 0) {
+      const existing = await tx.novelPromotionProp.findMany({
+        where: { episodeId, libName: { in: props.map((p) => p.libName) } },
+        select: { libName: true },
       });
-      if (!exist) {
-        await tx.novelPromotionProp.create({
-          data: {
+      const seen = new Set(existing.map((e) => e.libName));
+      const toCreate = props.filter((p) => !seen.has(p.libName));
+      if (toCreate.length > 0) {
+        await tx.novelPromotionProp.createMany({
+          data: toCreate.map((p) => ({
             id: nanoid(),
             episodeId,
             libName: p.libName,
             description: p.description ?? null,
-          },
+          })),
         });
       }
     }
